@@ -1,7 +1,0 @@
-     set ns ="USER"
-     zn ns
-     do $system.OBJ.ImportDir("/opt/ServiceInspection/src/XunJian",,"cbrpsuy",,1)
-     Do ##class(XunJian.Tasks.Util).CreateTask()
-     zn "%SYS"
-     Do ##class(Security.Users).UnExpireUserPasswords("*")
-     halt
