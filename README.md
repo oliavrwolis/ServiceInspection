@@ -6,6 +6,11 @@ A simple application for monitoring Iris service information
 
 ## IPM
  install ServiceInspection
+ Need to download the following Python package
+ xlutils
+ xlrd
+ psutil
+ reportlab
 ## docker 
 $ git clone https://github.com/oliavrwolis/ServiceInspection.git
 execute docker-compose up
