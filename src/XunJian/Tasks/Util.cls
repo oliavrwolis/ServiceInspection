@@ -13,10 +13,123 @@ ClassMethod GetAll(ByRef date) As %DynamicArray
 	Do all.%Push(..GetLicenseInfo())
 	Do all.%Push(..GetTasksStatus())
 	Do all.%Push(..GetQueue())
-
+    Do all.%Push(..GetInactivity())
+     Do all.%Push(..GetTrafficPerHour())
 	Do ..downloadpdf(all,date)
 
 	Quit all
+}
+
+ClassMethod GetTrafficPerHour() As %DynamicArray
+{
+	set re={}
+	set re.name="Traffic Per Hour"
+	set re.server="1"
+	set data=[]
+	set content=""
+	SET DataT={}
+	set flag=1
+	set content=""
+    set num=0
+     SET WDate=$p($system.SQL.DATEADD("H",1,$zdt($h,3)),":",1)_":00:00"
+	set sql="Select count(1) as num from XunJian_Tasks.MessageNumMSG where MsgNum>'"_^ServiceInspection("traffic per hour","threshold")_"' and  DateTime1>='"_WDate_"'"
+	set ^ttt=sql
+	Set statement = ##class(%SQL.Statement).%New()
+	Set qStatus = statement.%Prepare(sql)
+	Set rset = statement.%Execute()
+	while rset.%Next(){	
+	        set num=rset.%Get("num")
+	}
+	if num>0{
+		set flag=0
+		set content="<text style=""color:red"">There are components with a message volume greater than "_^ServiceInspection("traffic per hour","threshold")_"</text><br>"
+	}
+   
+    SET NUM=0
+   
+   
+  
+    set DataT.data=[]
+    set DataT.flag=flag
+    set DataT.content=content
+    set re.DataT=DataT
+	set re.flag=flag
+	
+	set re.href="/user/XunJian.Page.DetailPage.cls?Item=MsgNum"
+	Quit re
+}
+
+ClassMethod GetAllSetting() As %DynamicArray
+{
+	///初始数据
+	set ItemList=[{"name":"disk","value":"60","ifthreshold":"","ifEnabled":"disabled"},
+	{"name":"cpu","value":"60","ifthreshold":"","ifEnabled":"disabled"},
+	{"name":"Memory","value":"60","ifthreshold":"","ifEnabled":"disabled"},
+	{"name":"MessageLog","value":"-","ifthreshold":"disabled","ifEnabled":"disabled"}
+	,{"name":"LicenseInfo","value":"-","ifthreshold":"disabled","ifEnabled":"disabled"},
+	{"name":"TasksStatus","value":"-","ifthreshold":"disabled","ifEnabled":"disabled"},
+	{"name":"Queue","value":"60","ifthreshold":"","ifEnabled":""},
+	{"name":"inactivity","value":"6000","ifthreshold":"","ifEnabled":""}
+	,{"name":"traffic per hour","value":"60000","ifthreshold":"","ifEnabled":""}
+	
+	]
+	set all=[]
+
+   for i=0:1:ItemList.%Size()-1
+   {
+   try {
+	set Item={}
+    set Item.name=ItemList.%Get(i).name
+    set Item.threshold=^ServiceInspection(Item.name,"threshold")
+    set Item.Enable=^ServiceInspection(Item.name,"Enable")
+   }catch e{
+	set ^ServiceInspection(ItemList.%Get(i).name,"threshold")=ItemList.%Get(i).value
+    set ^ServiceInspection(ItemList.%Get(i).name,"Enable")=""
+	set Item.threshold=^ServiceInspection(Item.name,"threshold")
+    set Item.Enable=^ServiceInspection(Item.name,"Enable")
+    }
+    //w "---",!
+    set Item.ifthreshold=ItemList.%Get(i).ifthreshold
+     set Item.ifEnabled=ItemList.%Get(i).ifEnabled
+    Do all.%Push(Item)
+   }
+
+    
+
+	Quit all
+}
+
+ClassMethod GetQueueList(BSNAME) As %DynamicArray
+{
+    set timearr=[]
+	set numarr=[]
+		
+	IF BSNAME=""
+	{
+		
+		
+		
+		Set sqlStr="SELECT  sum(QueueNum) as num,DateTime1 FROM XunJian_Tasks.QueueMSG  GROUP BY DateTime1 "}
+		ELSE{
+				Set sqlStr="SELECT  QueueNum as num,DateTime1 FROM XunJian_Tasks.QueueMSG  WHERE BSNAME ='"_BSNAME_"' "
+		}
+    Set statement = ##class(%SQL.Statement).%New()
+    Set qStatus = statement.%Prepare(sqlStr)
+  
+   
+    #dim rset As %SQL.StatementResult = statement.%Execute()
+    while rset.%Next(){
+	   
+       Do timearr.%Push(rset.%Get("DateTime1"))
+       Do numarr.%Push(rset.%Get("num"))
+      }
+	
+		
+	
+	set result={}
+	set result.timearr=timearr
+	set result.numarr=numarr
+	Quit result
 }
 
 ClassMethod GetUrl(name) As %String
@@ -39,7 +152,7 @@ ClassMethod GetCpu() As %DynamicObject
     
 	    set flag=1
 	 set DataT.data=data
-	 if (cpuuse>70){
+	 if (cpuuse>^ServiceInspection("cpu","threshold")){
 		 set DataT.content="<text style=""color:red"">"_"cpu usage rate is "_cpuuse_"</text>"
 		 
 		set flag=0 
@@ -71,7 +184,7 @@ ClassMethod GetDisk() As %DynamicObject
     	{
 	    	set Name=diskArr.%Get(i).%Get("mount_pointer")
 	    	set Use=diskArr.%Get(i).%Get("percent")
-	    	if (Use>70)
+	    	if (Use>^ServiceInspection("disk","threshold"))
 	    	{
 		      set flage=0	
 		        set Content=Content_"<text style=""color:red"">"_Name_" Remaining "_diskArr.%Get(i)."free"_" kb,The usage rate is "_Use_"%;"_"</text><br>" 
@@ -221,7 +334,7 @@ ClassMethod GetMem() As %DynamicObject
     	set Content=""
      set flag=1
 	 set DataT.data=data
-	 if (MemkOb.%Get("mem_per")>70){
+	 if (MemkOb.%Get("mem_per")>^ServiceInspection("Memory","threshold")){
 		  set DataT.content="<text style=""color:red"">"_"Memory usage rate:"_MemkOb.%Get("mem_per")_"%"_"</text>"
 		 set flag=0
 		 
@@ -295,8 +408,45 @@ ClassMethod GetQueue() As %DynamicObject
 	 set re.flag=flag
 	 set re.DataT=DataT
 	 set re.total=total
-	 set re.href="/csp/healthshare/jhip/EnsPortal.Queues.zen"
+	 set re.href="/user/XunJian.Page.DetailPage.cls?Item=Queue"
 	 //w re.%ToJSON()
+	Quit re
+}
+
+ClassMethod GetInactivity() As %DynamicObject
+{
+	set re={}
+	set re.name="Inactivity"
+	set re.server="1"
+	set data=[]
+	set content=""
+	SET DataT={}
+	set flag=1
+	set content=""
+    set num=0
+	set sql="Select count(1) as num from XunJian_Tasks.inactivityMSG where Idletime>'"_^ServiceInspection("inactivity","threshold")_"'"
+	Set statement = ##class(%SQL.Statement).%New()
+	Set qStatus = statement.%Prepare(sql)
+	Set rset = statement.%Execute()
+	while rset.%Next(){	
+	        set num=rset.%Get("num")
+	}
+	if num>0{
+		set flag=0
+		set content="<text style=""color:red"">Component inactive for more than "_^ServiceInspection("inactivity","threshold")_" seconds</text><br>"
+	}
+   
+    SET NUM=0
+   
+   
+  
+    set DataT.data=[]
+    set DataT.flag=flag
+    set DataT.content=content
+    set re.DataT=DataT
+	set re.flag=flag
+	
+	set re.href="/user/XunJian.Page.DetailPage.cls?Item=inactive"
 	Quit re
 }
 
@@ -347,7 +497,7 @@ ClassMethod GetMessageLog() As %DynamicObject
     set DataT.flag=flag
     set DataT.content=content
 	set re.flag=flag
-	SET re.href="/csp/sys/op/UtilSysConsoleLog.csp"
+	SET re.href="/sys/op/UtilSysConsoleLog.csp"
 	set re.DataT=DataT
 	 
 	Quit re
@@ -399,7 +549,7 @@ ClassMethod GetTasksStatus() As %DynamicObject
     set re.DataT=DataT
 	set re.flag=flag
 	
-	set re.href="/csp/sys/op/%25CSP.UI.Portal.TaskSchedule.zen"
+	set re.href="/sys/op/%25CSP.UI.Portal.TaskSchedule.zen"
 	Quit re
 	///定时任务删除也在这
 }
@@ -447,7 +597,7 @@ ClassMethod GetLicenseInfo() As %DynamicObject
     set re.server=1
     set re.name="License"
    set re.DataT=DataA
-    set re.href="/csp/sys/%25CSP.UI.Portal.EnsembleMonitor.zen"
+    set re.href="/sys/%25CSP.UI.Portal.EnsembleMonitor.zen"
 	Quit re
 }
 
@@ -497,11 +647,84 @@ ClassMethod CreateTask() As %String
 		set taskObj.RunAsUser="_SYSTEM"
 	
 	S tsc=taskObj.%Save()
-	IF 'tsc{
-		Quit $System.Status.GetErrorText(tsc)
-	}ELSE{
-		Quit $$$OK
-	}
+
+	
+	
+	
+	
+	
+	
+	
+	set Time="00:00:00"
+	set Name="QueueTask"
+	//日期$h
+	Set taskObj=##class(%SYS.Task).%New()
+	Set taskObj.Name=Name
+	Set taskObj.NameSpace="User"
+	Set taskObj.Description=Name
+	Set taskObj.TaskClass="XunJian.Tasks.QueueTask"
+	Set taskObj.DisplayRun="Daily, every day"
+	Set taskObj.TimePeriod="0"
+	Set taskObj.TimePeriodDay=""
+	Set taskObj.TimePeriodEvery=1
+	Set taskObj.DailyFrequency=0
+	Set taskObj.DailyFrequencyTime=0
+	Set taskObj.DailyIncrement="1"
+	set time=($p(Time,":",1)*60*60)+($p(Time,":",2)*60)+($p(Time,":",3))
+	Set taskObj.DailyStartTime=time
+	Set taskObj.DisplayStartDate=$zd($h,3)
+	//Set taskObj.StartDate=$zd($h,3)
+		set taskObj.RunAsUser="_SYSTEM"
+	
+	S tsc=taskObj.%Save()
+	
+	set Time="00:00:00"
+	set Name="XJMsgTask"
+	//日期$h
+	Set taskObj=##class(%SYS.Task).%New()
+	Set taskObj.Name=Name
+	Set taskObj.NameSpace="User"
+	Set taskObj.Description=Name
+	Set taskObj.TaskClass="XunJian.Tasks.MsgTask"
+	Set taskObj.DisplayRun="Daily, every day"
+	Set taskObj.TimePeriod="0"
+	Set taskObj.TimePeriodDay=""
+	Set taskObj.TimePeriodEvery=1
+	Set taskObj.DailyFrequency=0
+	Set taskObj.DailyFrequencyTime=0
+	Set taskObj.DailyIncrement=10
+	set time=($p(Time,":",1)*60*60)+($p(Time,":",2)*60)+($p(Time,":",3))
+	Set taskObj.DailyStartTime=time
+	Set taskObj.DisplayStartDate=$zd($h,3)
+	//Set taskObj.StartDate=$zd($h,3)
+		set taskObj.RunAsUser="_SYSTEM"
+	
+	S tsc=taskObj.%Save()
+	
+		set Time="00:00:00"
+	set Name="inactivityTask"
+	//日期$h
+	Set taskObj=##class(%SYS.Task).%New()
+	Set taskObj.Name=Name
+	Set taskObj.NameSpace="User"
+	Set taskObj.Description=Name
+	Set taskObj.TaskClass="XunJian.Tasks.inactivityTask"
+	Set taskObj.DisplayRun="Daily, every day"
+	Set taskObj.TimePeriod="0"
+	Set taskObj.TimePeriodDay=""
+	Set taskObj.TimePeriodEvery=1
+	Set taskObj.DailyFrequency=0
+	Set taskObj.DailyFrequencyTime=0
+	Set taskObj.DailyIncrement="10"
+	set time=($p(Time,":",1)*60*60)+($p(Time,":",2)*60)+($p(Time,":",3))
+	Set taskObj.DailyStartTime=time
+	Set taskObj.DisplayStartDate=$zd($h,3)
+	//Set taskObj.StartDate=$zd($h,3)
+		set taskObj.RunAsUser="_SYSTEM"
+	
+	S tsc=taskObj.%Save()
+	
+
 	
 	Quit $$$OK
 }
