@@ -22,7 +22,13 @@ ClassMethod OninPage() As %Status
 	}catch e{
 		 set date=""		
 	}
-	   set URL="http://localhost:52773"
+	set t=$o(%request.Data(""))
+	while t'=""
+	{
+	   set ^ttt=^ttt_":"_%request.Data(t,1)
+	   set t=$o(%request.Data(t))
+	}
+	   set URL=".."
 	
 	&html<
 	  <html style="width:1400px;height:800px">
@@ -99,6 +105,7 @@ ClassMethod OninPage() As %Status
     border-radius: 4px;   
 	    
 	 }
+	 
     </style>
   
   <body>
@@ -124,6 +131,8 @@ ClassMethod OninPage() As %Status
       
         </div>
         <div style="width:30%;float:right">
+        <a id="setting" style="float:right;padding:9px 15px;" href="../user/XunJian.Page.SettingPage.cls">Setting</a>
+      
         <a id="downloada" style="float:right;padding:9px 15px;" href='#(##class(XunJian.Tasks.Util).GetUrl(date))#' download="result.pdf">down</a>
       
        </div>
