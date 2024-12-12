@@ -3,13 +3,14 @@
   <Document name="serviceinspection.ZPM">
     <Module>
       <Name>serviceinspection</Name>
-      <Version>0.0.1</Version>
+      <Version>0.0.2</Version>
       <Packaging>module</Packaging>
       <Resource Name="XunJian.PKG"/>
+      <CSPApplication CookiePath="/csp/user/" DefaultTimeout="900" DeployPath="c:\intersystems\healthconnect\csp\user\" Description="" MatchRoles=":{$dbrole}" PasswordAuthEnabled="1" Recurse="1" ServeFiles="1" ServeFilesTimeout="3600" SourcePath="user" UnauthenticatedEnabled="1" Url="/csp/user" UseSessionCookie="2"/>
+      <SourcesRoot>src</SourcesRoot>
       <Invokes>
         <Invoke Class="XunJian.Tasks.Util" Method="CreateTask" Phase="Activate" When="After" ></Invoke>
       </Invokes>
-      <SourcesRoot>src</SourcesRoot>
     </Module>
   </Document>
 </Export>
