@@ -6,7 +6,7 @@
       <Version>0.0.2</Version>
       <Packaging>module</Packaging>
       <Resource Name="XunJian.PKG"/>
-      <CSPApplication CookiePath="/csp/user/" DefaultTimeout="900" DeployPath="${cspdir}user/" Description="" MatchRoles=":{$dbrole}" PasswordAuthEnabled="1" Recurse="1" ServeFiles="1" ServeFilesTimeout="3600" SourcePath="user" UnauthenticatedEnabled="1" Url="/csp/user" UseSessionCookie="2"/>
+     <CSPApplication CookiePath="/csp/user/" DefaultTimeout="900" DeployPath="${cspdir}user/" Description="User Namespace applications" GroupById="%ISCMgtPortal" MatchRoles=":{$dbrole}" PasswordAuthEnabled="1" Recurse="1" ServeFiles="2" ServeFilesTimeout="3600" SourcePath="/user" UnauthenticatedEnabled="1" Url="/csp/user" UseSessionCookie="2"/>
       <SourcesRoot>src</SourcesRoot>
       <Invokes>
         <Invoke Class="XunJian.Tasks.Util" Method="CreateTask" Phase="Activate" When="After" ></Invoke>
