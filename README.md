@@ -27,12 +27,14 @@ Implemented from idea: https://ideas.intersystems.com/ideas/DPI-I-458
 
 1. Add two inspection items
 
-  ![dda286e40eed22227d5961bea0d6d07](https://github.com/user-attachments/assets/d6de9aab-c038-492b-94ce-284a6adc0e02)
+![image](https://github.com/user-attachments/assets/591ff08a-68c9-404e-b86c-ac5ea24860e3)
+
 
 
 2. Add a configuration page to set the threshold for inspection items and whether to push alarm information to the email image configuration;
 
-   ![0ec6f219e74ece128406a331abb7d06](https://github.com/user-attachments/assets/1e8bb2cd-75d8-4833-be71-bf33ec470d94)
+![dda286e40eed22227d5961bea0d6d07](https://github.com/user-attachments/assets/60f9fcf1-146a-40f3-8b80-0e4d72d360f1)
+
 
 
 3. Add a detail page that displays detailed information about component queues and inactive duration
